@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flatmate Chore Tracker</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 25px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .settings {
+            margin-bottom: 30px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .settings h2 {
+            margin-top: 0;
+            color: #3498db;
+        }
+        input, button {
+            padding: 8px 12px;
+            margin: 5px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .schedule-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .week {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .week-header {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .assignments {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            padding: 15px;
+        }
+        .assignment {
+            text-align: center;
+            padding: 15px 10px;
+            border-radius: 6px;
+            position: relative;
+        }
+        .assignment:nth-child(1) { background-color: #fadbd8; }
+        .assignment:nth-child(2) { background-color: #d4efdf; }
+        .assignment:nth-child(3) { background-color: #ebdef0; }
+        .assignment:nth-child(4) { background-color: #d6eaf8; }
+        .flatmate {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .chore {
+            font-size: 0.9em;
+        }
+        .check {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+        }
+        .theme-container {
+            margin-top: 25px;
+            padding: 15px;
+            background-color: #fffaf0;
+            border-radius: 8px;
+            border-left: 4px solid #f39c12;
+        }
+        .theme-title {
+            color: #e67e22;
+            margin-top: 0;
+            font-size: 1.2em;
+        }
+        .history-container {
+            margin-top: 30px;
+        }
+        .history-title {
+            color: #3498db;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+        .completed {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+        .month-display {
+            background-color: #2c3e50;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Flatmate Chore Tracker</h1>
+        
+        <div class="month-display">
+            Current Month: <span id="currentMonth">May</span>
+        </div>
+        
+        <div class="settings">
+            <div style="text-align: center;">
+                <button id="generateSchedule">Generate Schedule</button>
+            </div>
+        </div>
+        
+        <div class="theme-container">
+            <h3 class="theme-title">Monthly Theme: <span id="currentTheme">Fresh Start</span></h3>
+            <p id="themeDescription">Everyone starts with a clean slate! Take before and after photos of your completed chores to show your flatmates.</p>
+            <div style="text-align: right;">
+                <button id="newTheme">Generate New Theme</button>
+            </div>
+        </div>
+
+        <div class="schedule-container" id="scheduleContainer">
+            <!-- Schedule will be generated here -->
+        </div>
+        
+        <div class="controls">
+            <button id="rotateWeek">Rotate to Next Week</button>
+            <button id="resetAll">Reset All</button>
+        </div>
+        
+        <div class="history-container">
+            <h3 class="history-title">Chore History</h3>
+            <p id="historyText">No history yet. Start using the tracker to record who did what!</p>
+        </div>
+    </div>
+
+    <script>
+        // State management (without localStorage dependency)
+        const state = {
+            flatmates: ['Gabija', 'Celine', 'Adrien', 'Alex'],
+            chores: ['Vacuum & mopping', 'Trash (up & down)', 'Bathroom', 'Toilets'],
+            currentWeek: 0,
+            history: [],
+            themes: [
+                { name: 'Fresh Start', description: 'Everyone starts with a clean slate! Take before and after photos of your completed chores to show your flatmates.' },
+                { name: 'Speed Month', description: 'Time yourself doing your chore and share with flatmates. Who can clean efficiently without cutting corners?' },
+                { name: 'Competition Month', description: 'Rate each other\'s chore performance (1-5 stars). Person with highest monthly average gets a prize!' },
+                { name: 'Music Month', description: 'Create a cleaning playlist when it\'s your turn and share it with your flatmates.' },
+                { name: 'Teaching Month', description: 'Share one cleaning tip or trick with your flatmates when you finish your chore.' },
+                { name: 'Reward Month', description: 'Person with kitchen duty gets first pick of takeout orders or leftovers this week.' },
+                { name: 'Deep Clean Challenge', description: 'Add one extra deep-cleaning task to your assigned chore.' },
+                { name: 'Mystery Helper', description: 'Once a week, randomly help another flatmate with their chore without telling them in advance.' }
+            ],
+            currentTheme: 0,
+            completedChores: []
+        };
+
+        // Calculate current week number
+        function getWeekNumber(d) {
+            d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+            d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+            const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+            const weekNo = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+            return weekNo;
+        }
+        
+        // Calculate week starting date (Monday)
+        function getWeekStartDate(d) {
+            const day = d.getDay();
+            const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+            const monday = new Date(d.setDate(diff));
+            return monday;
+        }
+        
+        // Get month name
+        function getMonthName(date) {
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                           'July', 'August', 'September', 'October', 'November', 'December'];
+            return months[date.getMonth()];
+        }
+
+        // Initialize elements
+        document.addEventListener('DOMContentLoaded', () => {
+            // Display current month
+            const today = new Date();
+            const currentMonth = getMonthName(today);
+            document.getElementById('currentMonth').textContent = currentMonth;
+            
+            // Setup event listeners
+            document.getElementById('generateSchedule').addEventListener('click', generateSchedule);
+            document.getElementById('rotateWeek').addEventListener('click', rotateToNextWeek);
+            document.getElementById('resetAll').addEventListener('click', resetAll);
+            document.getElementById('newTheme').addEventListener('click', generateNewTheme);
+            
+            // Display theme
+            updateThemeDisplay();
+            
+            // Generate schedule automatically
+            generateSchedule();
+        });
+
+        function generateSchedule() {
+            const container = document.getElementById('scheduleContainer');
+            container.innerHTML = '';
+            
+            // Get current month
+            const currentMonth = document.getElementById('currentMonth').textContent;
+            
+            // Generate 4 weeks of the rotation
+            for (let week = 0; week < 4; week++) {
+                const weekElement = document.createElement('div');
+                weekElement.className = 'week';
+                weekElement.id = `week-${week}`;
+                
+                const isCurrentWeek = week === state.currentWeek;
+                
+                const weekHeader = document.createElement('div');
+                weekHeader.className = 'week-header';
+                weekHeader.innerHTML = `
+                    <h3>${currentMonth} week ${week + 1}</h3>
+                    ${isCurrentWeek ? '<span>Current Week</span>' : ''}
+                `;
+                weekElement.appendChild(weekHeader);
+                
+                const assignments = document.createElement('div');
+                assignments.className = 'assignments';
+                
+                for (let i = 0; i < 4; i++) {
+                    // Calculate which chore goes to which flatmate this week
+                    // Use current week of year to determine the rotation
+                    const weekNumber = getWeekNumber(new Date());
+                    const rotationOffset = weekNumber % 4;
+                    const choreIndex = (i + week + rotationOffset) % 4;
+                    const flatmateIndex = i;
+                    
+                    const assignment = document.createElement('div');
+                    assignment.className = 'assignment';
+                    
+                    const isCompleted = state.completedChores.some(
+                        c => c.week === week && c.flatmateIndex === flatmateIndex
+                    );
+                    
+                    assignment.innerHTML = `
+                        <div class="flatmate ${isCompleted ? 'completed' : ''}">${state.flatmates[flatmateIndex]}</div>
+                        <div class="chore ${isCompleted ? 'completed' : ''}">${state.chores[choreIndex]}</div>
+                    `;
+                    
+                    // Only add checkbox for current week
+                    if (isCurrentWeek) {
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.className = 'check';
+                        checkbox.checked = isCompleted;
+                        checkbox.dataset.week = week;
+                        checkbox.dataset.flatmateIndex = flatmateIndex;
+                        checkbox.dataset.choreIndex = choreIndex;
+                        checkbox.addEventListener('change', toggleCompleted);
+                        assignment.appendChild(checkbox);
+                    }
+                    
+                    assignments.appendChild(assignment);
+                }
+                
+                weekElement.appendChild(assignments);
+                container.appendChild(weekElement);
+            }
+            
+            updateHistory();
+        }
+
+        function toggleCompleted(event) {
+            const { week, flatmateIndex, choreIndex } = event.target.dataset;
+            
+            if (event.target.checked) {
+                // Add to completed chores
+                state.completedChores.push({
+                    week: parseInt(week),
+                    flatmateIndex: parseInt(flatmateIndex),
+                    choreIndex: parseInt(choreIndex),
+                    date: new Date().toISOString()
+                });
+                
+                // Add to history
+                state.history.push({
+                    flatmate: state.flatmates[flatmateIndex],
+                    chore: state.chores[choreIndex],
+                    week: parseInt(week) + 1,
+                    date: new Date().toLocaleDateString()
+                });
+            } else {
+                // Remove from completed chores
+                state.completedChores = state.completedChores.filter(
+                    c => !(c.week === parseInt(week) && c.flatmateIndex === parseInt(flatmateIndex))
+                );
+                
+                // Remove latest matching entry from history
+                const indexToRemove = state.history.findIndex(
+                    h => h.flatmate === state.flatmates[flatmateIndex] && 
+                         h.chore === state.chores[choreIndex] && 
+                         h.week === parseInt(week) + 1
+                );
+                
+                if (indexToRemove !== -1) {
+                    state.history.splice(indexToRemove, 1);
+                }
+            }
+            
+            updateHistory();
+            
+            // Update the UI to show completed status
+            const flatmateElement = event.target.parentElement.querySelector('.flatmate');
+            const choreElement = event.target.parentElement.querySelector('.chore');
+            
+            if (event.target.checked) {
+                flatmateElement.classList.add('completed');
+                choreElement.classList.add('completed');
+            } else {
+                flatmateElement.classList.remove('completed');
+                choreElement.classList.remove('completed');
+            }
+        }
+
+        function rotateToNextWeek() {
+            state.currentWeek = (state.currentWeek + 1) % 4;
+            generateSchedule();
+            alert('Rotated to next week!');
+        }
+
+        function generateNewTheme() {
+            state.currentTheme = (state.currentTheme + 1) % state.themes.length;
+            updateThemeDisplay();
+        }
+
+        function updateThemeDisplay() {
+            const theme = state.themes[state.currentTheme];
+            document.getElementById('currentTheme').textContent = theme.name;
+            document.getElementById('themeDescription').textContent = theme.description;
+        }
+
+        function updateHistory() {
+            const historyText = document.getElementById('historyText');
+            if (state.history.length === 0) {
+                historyText.textContent = 'No history yet. Start using the tracker to record who did what!';
+            } else {
+                historyText.innerHTML = state.history.map(h =>
+                    `<div><strong>${h.flatmate}</strong> completed <em>${h.chore}</em> (Week ${h.week}) on ${h.date}</div>`
+                ).join('');
+            }
+        }
+
+        function resetAll() {
+            if (confirm('Are you sure you want to reset all completed chores and history?')) {
+                state.completedChores = [];
+                state.history = [];
+                state.currentWeek = 0;
+                generateSchedule();
+            }
+        }
+    </script>
+</body>
+</html>
