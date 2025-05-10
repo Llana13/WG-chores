@@ -36,10 +36,11 @@
             color: #3498db;
         }
         input, button {
-            padding: 8px 12px;
+            padding: 12px 16px;
             margin: 5px;
             border-radius: 4px;
             border: 1px solid #ddd;
+            font-size: 1em;
         }
         button {
             background-color: #3498db;
@@ -90,15 +91,15 @@
             margin-bottom: 5px;
         }
         .chore {
-            font-size: 0.9em;
+            font-size: 0.95em;
         }
         .check {
             position: absolute;
             top: 5px;
             right: 5px;
             cursor: pointer;
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
         }
         .theme-container {
             margin-top: 25px;
@@ -122,6 +123,8 @@
         }
         .controls {
             display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
             justify-content: space-between;
             margin-top: 20px;
         }
@@ -138,6 +141,61 @@
             margin-bottom: 20px;
             font-size: 1.5em;
             font-weight: bold;
+        }
+
+        /* --- Responsive Design --- */
+        @media (max-width: 600px) {
+            body {
+                padding: 5px;
+            }
+            .container {
+                padding: 8px;
+            }
+            h1 {
+                font-size: 1.3em;
+                margin-bottom: 18px;
+            }
+            .settings {
+                margin-bottom: 16px;
+                padding: 10px;
+            }
+            .schedule-container {
+                gap: 10px;
+            }
+            .week-header {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 8px 8px;
+                font-size: 1em;
+            }
+            .assignments {
+                grid-template-columns: 1fr;
+                gap: 8px;
+                padding: 8px;
+            }
+            .assignment {
+                padding: 12px 6px;
+                font-size: 1em;
+            }
+            .theme-container {
+                margin-top: 15px;
+                padding: 10px;
+                font-size: 0.98em;
+            }
+            .controls {
+                flex-direction: column;
+                gap: 8px;
+                margin-top: 10px;
+            }
+            .month-display {
+                font-size: 1.1em;
+                padding: 10px;
+                margin-bottom: 12px;
+            }
+            input, button {
+                padding: 10px 10px;
+                font-size: 1em;
+            }
         }
     </style>
 </head>
